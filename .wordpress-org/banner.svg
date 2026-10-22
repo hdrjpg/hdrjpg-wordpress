@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1544" height="500" viewBox="0 0 1544 500">
+  <!-- Photo by Chester Wade, as edited for the "HDR images on the web" article: the left sign at standard brightness, the right one as HDR shows it -->
+  <image xlink:href="neon-source.jpg" x="0" y="-45" width="1544" height="749" preserveAspectRatio="xMidYMid slice"/>
+  <g font-family="IBM Plex Sans" font-weight="600" font-size="26" letter-spacing="2">
+    <rect x="40" y="436" width="92" height="40" rx="20" fill="#000000" fill-opacity="0.55"/>
+    <text x="86" y="465" text-anchor="middle" fill="#ffffff">SDR</text>
+    <rect x="1412" y="436" width="92" height="40" rx="20" fill="#000000" fill-opacity="0.55"/>
+    <text x="1458" y="465" text-anchor="middle" fill="#ffffff">HDR</text>
+  </g>
+</svg>
