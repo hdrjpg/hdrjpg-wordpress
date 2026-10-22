@@ -8,7 +8,7 @@ Stable tag: 1.0.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Show your HDR photos in HDR on your site: iPhone HEIC, Android Ultra HDR and EXR photos, converted with HDRJPG and shown in HDR in almost every browser.
+Show your iPhone, Android and EXR HDR photos in HDR on your site, in almost every browser, with HDRJPG.
 
 == Description ==
 

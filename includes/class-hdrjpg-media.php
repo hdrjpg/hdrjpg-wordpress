@@ -64,7 +64,8 @@ class Hdrjpg_Media
             )).'</p>'.$button(__('Convert again', 'hdrjpg'));
         }
         if ($status === 'failed') {
-            return '<p class="hdrjpg-error" style="color:#b32d2e">'.esc_html($state['error'] ?? __('The conversion failed.', 'hdrjpg')).'</p>'.$button(__('Try again', 'hdrjpg'));
+            // The error is HTML-safe text already; kses with no tags allowed keeps it so without escaping it twice
+            return '<p class="hdrjpg-error" style="color:#b32d2e">'.wp_kses($state['error'] ?? esc_html__('The conversion failed.', 'hdrjpg'), []).'</p>'.$button(__('Try again', 'hdrjpg'));
         }
         return '<p>'.esc_html__('Make this photo show in HDR on your site.', 'hdrjpg').'</p>'.$button(__('Convert to HDR', 'hdrjpg'));
     }
@@ -143,11 +144,14 @@ class Hdrjpg_Media
 
     public static function bulkNotice(): void
     {
+        // Counts the bulk action put in its own redirect, only displayed as numbers: nothing here acts on the request
+        // phpcs:disable WordPress.Security.NonceVerification.Recommended
         if (!isset($_GET['hdrjpg_started']) || get_current_screen()->id !== 'upload') {
             return;
         }
         $started = absint($_GET['hdrjpg_started']);
         $failed = absint($_GET['hdrjpg_failed'] ?? 0);
+        // phpcs:enable WordPress.Security.NonceVerification.Recommended
         echo '<div class="notice notice-'.($failed ? 'warning' : 'success').' is-dismissible"><p>';
         echo esc_html(sprintf(
             /* translators: %d: number of photos */

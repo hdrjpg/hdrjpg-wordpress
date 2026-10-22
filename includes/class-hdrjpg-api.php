@@ -75,7 +75,8 @@ class Hdrjpg_Api
 
         $response = wp_remote_request(add_query_arg(array_map('rawurlencode', $query), $this->baseUrl.'/'.$endpoint), $arguments);
         if (is_wp_error($response)) {
-            throw new Hdrjpg_Api_Exception(sprintf(__('Could not reach HDRJPG: %s', 'hdrjpg'), $response->get_error_message()));
+            /* translators: %s: the network error */
+            throw new Hdrjpg_Api_Exception(esc_html(sprintf(__('Could not reach HDRJPG: %s', 'hdrjpg'), $response->get_error_message())));
         }
 
         $code = (int)wp_remote_retrieve_response_code($response);
@@ -86,8 +87,13 @@ class Hdrjpg_Api
             }
             $data = json_decode($responseBody, true);
             throw new Hdrjpg_Api_Exception(
-                sprintf(__('HDRJPG answered %1$d: %2$s', 'hdrjpg'), $code, is_array($data) && !empty($data['errorDescription']) ? $data['errorDescription'] : wp_remote_retrieve_response_message($response)),
-                $code
+                esc_html(sprintf(
+                    /* translators: 1: HTTP status code, 2: the API's error message */
+                    __('HDRJPG answered %1$d: %2$s', 'hdrjpg'),
+                    $code,
+                    is_array($data) && !empty($data['errorDescription']) ? $data['errorDescription'] : wp_remote_retrieve_response_message($response)
+                )),
+                (int)$code
             );
         }
         return $saveTo ? [] : (array)json_decode($responseBody, true);
@@ -97,12 +103,15 @@ class Hdrjpg_Api
     {
         $conversion = isset($data['conversions']) && is_array($data['conversions']) ? reset($data['conversions']) : null;
         if (!is_array($conversion) || empty($conversion['uuid'])) {
-            throw new Hdrjpg_Api_Exception(__('HDRJPG sent an answer the plugin does not understand.', 'hdrjpg'));
+            throw new Hdrjpg_Api_Exception(esc_html__('HDRJPG sent an answer the plugin does not understand.', 'hdrjpg'));
         }
         return $conversion;
     }
 }
 
+/**
+ * Its message is HTML-safe text, escaped where it is made.
+ */
 class Hdrjpg_Api_Exception extends Exception
 {
 }

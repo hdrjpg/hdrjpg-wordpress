@@ -8,7 +8,7 @@ if (!defined('ABSPATH')) {
  * Converts an attachment's original photo with the HDRJPG API and keeps the results next to it.
  *
  * State is kept in the attachment's _hdrjpg meta:
- * status (running, ready or failed), uuid, error, started, files (each with file, format, width and height).
+ * status (running, ready or failed), uuid, error (HTML-safe text), started, files (each with file, format, width and height).
  * A running conversion is followed by a WP-Cron event, and by the Media Library's own polling when someone is watching.
  */
 class Hdrjpg_Converter
@@ -80,12 +80,7 @@ class Hdrjpg_Converter
      */
     public static function hasGainMap(string $path): bool
     {
-        $handle = @fopen($path, 'rb');
-        if (!$handle) {
-            return false;
-        }
-        $head = (string)fread($handle, 262144);
-        fclose($handle);
+        $head = is_readable($path) ? (string)file_get_contents($path, false, null, 0, 262144) : '';
         return strpos($head, 'http://ns.adobe.com/hdr-gain-map/1.0/') !== false || strpos($head, 'urn:iso:std:iso:ts:21496:-1') !== false;
     }
 
@@ -96,14 +91,14 @@ class Hdrjpg_Converter
     {
         $apiKey = (string)Hdrjpg_Settings::get('api_key');
         if ($apiKey === '') {
-            throw new Exception(__('Add your HDRJPG API key in Settings > HDRJPG first.', 'hdrjpg'));
+            throw new Exception(esc_html__('Add your HDRJPG API key in Settings > HDRJPG first.', 'hdrjpg'));
         }
         if (!self::isSource($attachmentId)) {
-            throw new Exception(__('Only HEIC, JPG and EXR photos can be converted.', 'hdrjpg'));
+            throw new Exception(esc_html__('Only HEIC, JPG and EXR photos can be converted.', 'hdrjpg'));
         }
         $path = self::sourcePath($attachmentId);
         if (!is_readable($path)) {
-            throw new Exception(__('The uploaded file is missing from the server.', 'hdrjpg'));
+            throw new Exception(esc_html__('The uploaded file is missing from the server.', 'hdrjpg'));
         }
 
         $conversion = (new Hdrjpg_Api($apiKey))->submit($path, self::variants($path));
@@ -159,7 +154,7 @@ class Hdrjpg_Converter
             } elseif (in_array($conversion['status'], ['Failed', 'Cancelled', 'Deleted'], true)) {
                 $state = self::fail($attachmentId, self::failDescription($conversion));
             } elseif (time() - (int)$state['started'] > self::GIVE_UP_AFTER) {
-                $state = self::fail($attachmentId, __('The conversion took too long. Please try again.', 'hdrjpg'));
+                $state = self::fail($attachmentId, esc_html__('The conversion took too long. Please try again.', 'hdrjpg'));
             }
         } catch (Hdrjpg_Api_Exception $e) {
             // A network hiccup is retried at the next check; an answer from the API about this conversion is final
@@ -198,7 +193,7 @@ class Hdrjpg_Converter
             }
         }
         $descriptions = array_unique(array_filter(array_map('strval', $descriptions)));
-        return $descriptions ? implode(' ', $descriptions) : __('The conversion failed.', 'hdrjpg');
+        return $descriptions ? esc_html(implode(' ', $descriptions)) : esc_html__('The conversion failed.', 'hdrjpg');
     }
 
     /**
@@ -244,7 +239,7 @@ class Hdrjpg_Converter
         self::deleteFiles($attachmentId);
         if (!wp_mkdir_p($directory['path'])) {
             wp_delete_file($zipFile);
-            throw new Exception(__('Could not create the folder for the converted files in wp-content/uploads.', 'hdrjpg'));
+            throw new Exception(esc_html__('Could not create the folder for the converted files in wp-content/uploads.', 'hdrjpg'));
         }
 
         // What the API knows about each output file, by file name
@@ -257,12 +252,12 @@ class Hdrjpg_Converter
 
         if (!class_exists('ZipArchive')) {
             wp_delete_file($zipFile);
-            throw new Exception(__('The PHP zip extension is needed to unpack the converted files. Ask your host to enable it.', 'hdrjpg'));
+            throw new Exception(esc_html__('The PHP zip extension is needed to unpack the converted files. Ask your host to enable it.', 'hdrjpg'));
         }
         $zip = new ZipArchive();
         if ($zip->open($zipFile) !== true) {
             wp_delete_file($zipFile);
-            throw new Exception(__('The converted files could not be unpacked.', 'hdrjpg'));
+            throw new Exception(esc_html__('The converted files could not be unpacked.', 'hdrjpg'));
         }
         $files = [];
         for ($i = 0; $i < $zip->numFiles; $i++) {
@@ -283,7 +278,7 @@ class Hdrjpg_Converter
         wp_delete_file($zipFile);
 
         if (!$files) {
-            throw new Exception(__('The conversion finished but returned no files.', 'hdrjpg'));
+            throw new Exception(esc_html__('The conversion finished but returned no files.', 'hdrjpg'));
         }
         usort($files, fn ($a, $b) => $b['width'] <=> $a['width']);
         return $files;
@@ -292,11 +287,13 @@ class Hdrjpg_Converter
     public static function deleteFiles(int $attachmentId): void
     {
         $path = self::directory($attachmentId)['path'];
-        if (is_dir($path)) {
-            foreach ((array)glob($path.'/*') as $file) {
-                wp_delete_file($file);
-            }
-            @rmdir($path);
+        if (!is_dir($path)) {
+            return;
+        }
+        global $wp_filesystem;
+        require_once ABSPATH.'wp-admin/includes/file.php';
+        if (WP_Filesystem()) {
+            $wp_filesystem->rmdir($path, true);
         }
     }
 }
