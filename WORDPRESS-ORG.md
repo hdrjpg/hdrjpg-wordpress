@@ -6,6 +6,10 @@ emails of 2026-10-27. No need to dig the emails up again.
 ## Status
 
 - **Approved 2026-10-27.** Review ID `APPROVED hdrjpg/tincat/26Oct26/T3 27Oct26/4.3 (P0TDX392387HGN)`.
+- **1.0.0 released 2026-10-27** (SVN r3768237: trunk, tags/1.0.0, assets). `svn` is installed on
+  this machine; the SVN password is in `~/.claude/secrets/wordpress-svn.env` (`WP_SVN_PASSWORD`).
+  Plugin files come from the Git repo; `.wordpress-org/banner.svg` and `neon-source.jpg` are source
+  files and are not uploaded.
 - Display name: **HDRJPG – HDR photos**. Slug: **`hdrjpg`** (permanent, cannot be changed after approval).
 - Review history: submitted ~2026-10-22. The automated pre-review (2026-10-26) flagged no code
   issues, only asked how the plugin stands out from the ~300 "image optimization" plugins. We
