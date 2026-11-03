@@ -10,6 +10,10 @@ emails of 2026-10-27. No need to dig the emails up again.
   this machine; the SVN password is in `~/.claude/secrets/wordpress-svn.env` (`WP_SVN_PASSWORD`).
   Plugin files come from the Git repo; `.wordpress-org/banner.svg` and `neon-source.jpg` are source
   files and are not uploaded.
+- **1.1.0 released 2026-11-03** (SVN r3781656: trunk, tags/1.1.0; assets unchanged). Before it: the e2e
+  tests against the mock API and Plugin Check on the shipped files only (`assets/`, `includes/`,
+  `hdrjpg.php`, `readme.txt`, `uninstall.php`), both in a throwaway WordPress. Plugin Check on the whole
+  repo flags `tests/` and this file, which are not shipped.
 - Display name: **HDRJPG – HDR photos**. Slug: **`hdrjpg`** (permanent, cannot be changed after approval).
 - Review history: submitted ~2026-10-22. The automated pre-review (2026-10-26) flagged no code
   issues, only asked how the plugin stands out from the ~300 "image optimization" plugins. We
@@ -45,15 +49,15 @@ up to 72 hours to update.
 - `readme.txt` controls the public page (description, FAQ, changelog, screenshots captions).
   Validate it before committing: https://wordpress.org/plugins/developers/readme-validator/
 
-Typical release (to adapt once we have done the first one):
+Typical release (as done for 1.1.0):
 
 ```bash
 svn co https://plugins.svn.wordpress.org/hdrjpg hdrjpg-svn
 # copy plugin files (no .git, tests, .wordpress-org, README.md) into hdrjpg-svn/trunk/
 # copy .wordpress-org/* into hdrjpg-svn/assets/
 svn add --force hdrjpg-svn/trunk hdrjpg-svn/assets
-svn cp hdrjpg-svn/trunk hdrjpg-svn/tags/1.0.0
-svn ci hdrjpg-svn -m "Release 1.0.0" --username tincat
+svn cp hdrjpg-svn/trunk hdrjpg-svn/tags/<version>
+svn ci hdrjpg-svn -m "Release <version>" --username tincat
 ```
 
 Committing to SVN publishes to every WordPress site: it needs the owner's go-ahead each time.
