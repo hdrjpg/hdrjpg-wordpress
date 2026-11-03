@@ -62,9 +62,10 @@ class Hdrjpg_Converter
         if (!Hdrjpg_Settings::get('auto_convert') || !self::isSource($attachmentId)) {
             return;
         }
-        // Only photos that carry HDR: every JPEG upload would otherwise spend a conversion and fail on the flat ones
+        // A JPEG without a gain map is SDR: it is converted only when SDR photos are expanded to HDR, since it would
+        // otherwise spend a request on a conversion that fails
         $path = self::sourcePath($attachmentId);
-        if (get_post_mime_type($attachmentId) === 'image/jpeg' && !self::hasGainMap($path)) {
+        if (get_post_mime_type($attachmentId) === 'image/jpeg' && !Hdrjpg_Settings::get('expand_sdr') && !self::hasGainMap($path)) {
             return;
         }
         try {
@@ -198,6 +199,7 @@ class Hdrjpg_Converter
 
     /**
      * The variants the settings ask for: a gain map JPEG and an AVIF at each width, and one MP4 at the largest.
+     * An SDR source is expanded to HDR when the settings say so; otherwise the API fails the conversion.
      */
     public static function variants(string $sourcePath): array
     {
@@ -217,6 +219,9 @@ class Hdrjpg_Converter
         }
         if (Hdrjpg_Settings::get('mp4')) {
             $variants[] = ['width' => $widths[0], 'format' => 'mp4', 'fileName' => $base.'-'.$widths[0]];
+        }
+        if (Hdrjpg_Settings::get('expand_sdr')) {
+            $variants = array_map(fn ($variant) => $variant + ['onSdr' => 'expandToHdr'], $variants);
         }
         return $variants;
     }

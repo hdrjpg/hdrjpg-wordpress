@@ -1,6 +1,9 @@
-/* HDRJPG: starts conversions from a photo's details in the Media Library and follows them until they finish. */
+/* HDRJPG: starts conversions from a photo's details in the Media Library, follows them until they finish, and shows
+   converted photos in HDR in their preview, with the same HDRJPG embed as on the site. */
 (function () {
     const followed = new Set();
+    // The embed markup each preview shows
+    const shown = new WeakMap();
 
     function post(action, id) {
         const body = new URLSearchParams({action, id, nonce: hdrjpgAdmin.nonce});
@@ -11,7 +14,44 @@
     function render(id, data) {
         document.querySelectorAll('.hdrjpg-field[data-id="' + id + '"]').forEach((field) => {
             field.innerHTML = data.html;
+            field.dataset.hdrHtml = data.hdrHtml;
+            showHdr(field);
         });
+    }
+
+    // The preview next to the field, in the media modal or on the attachment's edit page: WordPress's image, or the
+    // embed that already replaced it
+    function preview(field) {
+        const details = field.closest('.attachment-details');
+        return details
+            ? details.querySelector('.hdrjpg[data-hdrjpg-preview], img.details-image')
+            : document.querySelector('#thumbnail-head-' + field.dataset.id + ' :is(.hdrjpg[data-hdrjpg-preview], img)');
+    }
+
+    function showHdr(field) {
+        const current = preview(field);
+        const html = field.dataset.hdrHtml;
+        if (!current || !html || shown.get(current) === html) {
+            return;
+        }
+        const template = document.createElement('template');
+        template.innerHTML = html.trim();
+        const embed = template.content.firstElementChild;
+        const img = embed.querySelector('img');
+        // The preview's own look: WordPress styles it by its class, and sizes it with CSS rather than width and height
+        const original = current.matches('img') ? current : current.querySelector('img, video');
+        embed.dataset.hdrjpgPreview = '';
+        embed.dataset.previewClass = current.dataset.previewClass ?? original.getAttribute('class') ?? '';
+        embed.dataset.previewStyle = current.dataset.previewStyle ?? original.getAttribute('style') ?? '';
+        img.setAttribute('class', embed.dataset.previewClass);
+        img.setAttribute('style', [embed.dataset.previewStyle, img.getAttribute('style')].filter(Boolean).join('; '));
+        img.removeAttribute('width');
+        img.removeAttribute('height');
+        img.draggable = false;
+        shown.set(embed, html);
+        current.replaceWith(embed);
+        // Firefox and Safari on a Mac show the MP4 instead, as on the site
+        hdrjpg.apply(embed.parentElement);
     }
 
     function follow(id) {
@@ -54,10 +94,14 @@
         });
     });
 
-    // The details panel is drawn by the media modal after page load: follow running conversions as they appear
-    new MutationObserver(() => {
+    // The details panel is drawn by the media modal after page load: follow running conversions and show converted
+    // photos in HDR as they appear
+    const scan = () => {
         document.querySelectorAll('.hdrjpg-field .hdrjpg-running').forEach((running) => {
             follow(running.closest('.hdrjpg-field').dataset.id);
         });
-    }).observe(document.body, {childList: true, subtree: true});
+        document.querySelectorAll('.hdrjpg-field[data-hdr-html]').forEach(showHdr);
+    };
+    new MutationObserver(scan).observe(document.body, {childList: true, subtree: true});
+    scan();
 })();

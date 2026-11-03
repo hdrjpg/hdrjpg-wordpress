@@ -104,6 +104,16 @@ class Hdrjpg_Frontend
         return '<span class="hdrjpg"'.$video.'><picture>'.$source.$img->get_updated_html().'</picture></span>';
     }
 
+    /**
+     * The HDRJPG embed of a converted photo, for its preview in the Media Library; '' if it is not converted.
+     */
+    public static function previewHtml(int $attachmentId): string
+    {
+        $img = '<img alt="">';
+        $html = self::embed($img, $attachmentId);
+        return $html === $img ? '' : $html;
+    }
+
     private static function url(array $file): string
     {
         return trailingslashit(wp_get_upload_dir()['baseurl']).$file['file'];

@@ -48,6 +48,8 @@ class Hdrjpg_Api
      */
     public function download(string $conversionUuid): string
     {
+        // wp_tempnam() is an admin function, and WP-Cron runs this outside the admin
+        require_once ABSPATH.'wp-admin/includes/file.php';
         $file = wp_tempnam('hdrjpg.zip');
         $this->request('GET', 'download', ['conversionUuid' => $conversionUuid], null, null, $file);
         return $file;
@@ -80,8 +82,10 @@ class Hdrjpg_Api
         }
 
         $code = (int)wp_remote_retrieve_response_code($response);
-        $responseBody = $saveTo ? ($code === 200 ? '' : (string)file_get_contents($saveTo)) : wp_remote_retrieve_body($response);
-        if ($code !== 200) {
+        // The API answers 202 to /convert and /status, and 200 to /download
+        $isSuccess = $code >= 200 && $code < 300;
+        $responseBody = $saveTo ? ($isSuccess ? '' : (string)file_get_contents($saveTo)) : wp_remote_retrieve_body($response);
+        if (!$isSuccess) {
             if ($saveTo) {
                 wp_delete_file($saveTo);
             }

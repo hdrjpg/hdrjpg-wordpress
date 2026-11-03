@@ -4,7 +4,7 @@ Tags: hdr, hdr photos, ultra hdr, gain map, heic
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.0.0
+Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -26,7 +26,7 @@ Wherever the photo appears in your posts and pages, in an Image block, in a gall
 
 1. Create an account at [hdrjpg.com](https://hdrjpg.com/signup) and copy your API key.
 2. In WordPress, go to Settings > HDRJPG and paste the key.
-3. Open an HDR photo in the Media Library and press Convert to HDR. To convert several, select them in the list view and choose Convert to HDR from the bulk actions. You can also have new HDR uploads converted automatically.
+3. Open an HDR photo in the Media Library and press Convert to HDR. To convert several, select them in the list view and choose Convert to HDR from the bulk actions. You can also have new uploads converted automatically.
 
 A conversion takes a minute or two. The photo keeps its normal version on your site until it is done.
 
@@ -45,7 +45,9 @@ This plugin uses the HDRJPG API, a service run by Tin.cat, to convert photos. Wh
 
 = Which photos can it convert? =
 
-iPhone and iPad HEIC photos, Android Ultra HDR JPGs and other JPGs with a gain map (from Lightroom, Photoshop or Camera Raw, for example), and EXR files. A photo that carries no HDR fails to convert and does not count against your conversions.
+iPhone and iPad HEIC photos, Android Ultra HDR JPGs and other JPGs with a gain map (from Lightroom, Photoshop or Camera Raw, for example), and EXR files.
+
+It also converts photos that have no HDR, such as normal JPGs. Their brightness range is expanded artificially to HDR: they look like the original, with brighter highlights on HDR screens. To turn this off, untick "Convert SDR photos to HDR" in Settings > HDRJPG. A photo without HDR then fails to convert and does not count against your conversions.
 
 = Why does Firefox get a video? =
 
@@ -60,6 +62,14 @@ In wp-content/uploads/hdrjpg/, in a folder per photo. They are deleted when you 
 No. The upload and the sizes WordPress made of it stay as they are, and the plugin stops serving the HDR files as soon as you deactivate it.
 
 == Changelog ==
+
+= 1.1.0 =
+* New: photos without HDR, such as normal JPGs, are converted too. Their brightness range is expanded artificially to HDR. You can turn this off in Settings > HDRJPG.
+* New: with automatic conversion on, normal JPG uploads are converted too, as long as SDR photos are converted to HDR.
+* New: the photo's preview in the Media Library shows the HDR version, as it shows on your site.
+* Fix: conversions failed with "HDRJPG answered 202: Accepted".
+* Fix: automatic conversions stayed at "Converting" and never finished.
+* Fix: the HDR field in the Media Library lines up with its label.
 
 = 1.0.0 =
 * First release.

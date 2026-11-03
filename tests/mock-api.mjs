@@ -47,7 +47,7 @@ createServer(async (request, response) => {
         }
         const uuid = fileName.startsWith('flat') ? 'fail' : 'c' + conversions.size;
         conversions.set(uuid, {variants, fail: fileName.startsWith('flat')});
-        return send(200, {conversions: [{uuid, status: 'Pending', variants: []}]});
+        return send(202, {conversions: [{uuid, status: 'Pending', variants: []}]});
     }
     const uuid = url.searchParams.get('conversionUuid');
     const conversion = conversions.get(uuid);
@@ -57,8 +57,8 @@ createServer(async (request, response) => {
         outputImageWidth: v.width, outputImageHeight: Math.round(v.width * 2 / 3), failDescriptions: null,
     }));
     if (url.pathname === '/status') {
-        if (conversion.fail) return send(200, {conversions: [{uuid, status: 'Failed', failDescriptions: ['The source image is not an HDR image'], variants: []}]});
-        return send(200, {conversions: [{uuid, status: 'Ready', variants: outputs}]});
+        if (conversion.fail) return send(202, {conversions: [{uuid, status: 'Failed', failDescriptions: ['The source image is not an HDR image'], variants: []}]});
+        return send(202, {conversions: [{uuid, status: 'Ready', variants: outputs}]});
     }
     if (url.pathname === '/download') {
         return send(200, zip(outputs.map((o) => [o.outputImageFileName, 'converted ' + o.outputImageFileName])), 'application/zip');

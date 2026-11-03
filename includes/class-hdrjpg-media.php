@@ -22,11 +22,19 @@ class Hdrjpg_Media
 
     public static function scripts(): void
     {
-        wp_enqueue_script('hdrjpg-admin', HDRJPG_URL.'assets/admin.js', [], HDRJPG_VERSION, true);
+        // hdrjpg.js: the previews of converted photos are HDRJPG embeds, as on the site
+        Hdrjpg_Frontend::registerScript();
+        wp_enqueue_script('hdrjpg-admin', HDRJPG_URL.'assets/admin.js', ['hdrjpg'], HDRJPG_VERSION, true);
         wp_localize_script('hdrjpg-admin', 'hdrjpgAdmin', [
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('hdrjpg'),
         ]);
+        // Lines the HDR field's text up with its label. WordPress centres the label on the row on the edit page, which
+        // suits one input but not a few lines of text, and pads the label from the top by 5px there
+        // (.compat-attachment-fields th) and by 8px in the media modal (.compat-item label span)
+        wp_register_style('hdrjpg-admin', false, [], HDRJPG_VERSION);
+        wp_enqueue_style('hdrjpg-admin');
+        wp_add_inline_style('hdrjpg-admin', '.compat-field-hdrjpg th { vertical-align: top; } .compat-attachment-fields .hdrjpg-field > p:first-child { margin-top: 5px; } .compat-item .compat-attachment-fields .hdrjpg-field > p:first-child { margin-top: 8px; }');
     }
 
     public static function field(array $fields, WP_Post $post): array
@@ -37,7 +45,13 @@ class Hdrjpg_Media
         $fields['hdrjpg'] = [
             'label' => __('HDR', 'hdrjpg'),
             'input' => 'html',
-            'html' => '<div class="hdrjpg-field" data-id="'.esc_attr((string)$post->ID).'">'.self::fieldHtml($post->ID).'</div>',
+            // data-hdr-html: admin.js shows the photo's preview with it
+            'html' => sprintf(
+                '<div class="hdrjpg-field" data-id="%s" data-hdr-html="%s">%s</div>',
+                esc_attr((string)$post->ID),
+                esc_attr(Hdrjpg_Frontend::previewHtml($post->ID)),
+                self::fieldHtml($post->ID)
+            ),
         ];
         return $fields;
     }
@@ -108,6 +122,7 @@ class Hdrjpg_Media
         wp_send_json_success([
             'status' => Hdrjpg_Converter::state($attachmentId)['status'] ?? '',
             'html' => self::fieldHtml($attachmentId),
+            'hdrHtml' => Hdrjpg_Frontend::previewHtml($attachmentId),
         ]);
     }
 

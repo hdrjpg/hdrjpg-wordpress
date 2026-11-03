@@ -16,6 +16,7 @@ class Hdrjpg_Settings
         'widths' => '2400, 1200',
         'avif' => 1,
         'mp4' => 1,
+        'expand_sdr' => 1,
         'auto_convert' => 0,
     ];
 
@@ -66,6 +67,7 @@ class Hdrjpg_Settings
         add_settings_field('api_key', __('API key', 'hdrjpg'), [self::class, 'fieldApiKey'], 'hdrjpg', 'hdrjpg_account', ['label_for' => 'hdrjpg_api_key']);
         add_settings_field('widths', __('Widths', 'hdrjpg'), [self::class, 'fieldWidths'], 'hdrjpg', 'hdrjpg_account', ['label_for' => 'hdrjpg_widths']);
         add_settings_field('formats', __('Extra formats', 'hdrjpg'), [self::class, 'fieldFormats'], 'hdrjpg', 'hdrjpg_account');
+        add_settings_field('expand_sdr', __('SDR photos', 'hdrjpg'), [self::class, 'fieldExpandSdr'], 'hdrjpg', 'hdrjpg_account');
         add_settings_field('auto_convert', __('New uploads', 'hdrjpg'), [self::class, 'fieldAutoConvert'], 'hdrjpg', 'hdrjpg_account');
     }
 
@@ -80,6 +82,7 @@ class Hdrjpg_Settings
             'widths' => sanitize_text_field((string)($input['widths'] ?? self::DEFAULTS['widths'])),
             'avif' => empty($input['avif']) ? 0 : 1,
             'mp4' => empty($input['mp4']) ? 0 : 1,
+            'expand_sdr' => empty($input['expand_sdr']) ? 0 : 1,
             'auto_convert' => empty($input['auto_convert']) ? 0 : 1,
         ];
     }
@@ -127,14 +130,26 @@ class Hdrjpg_Settings
         echo '</p>';
     }
 
+    public static function fieldExpandSdr(): void
+    {
+        printf(
+            '<label><input type="checkbox" name="%s[expand_sdr]" value="1" %s> %s</label>',
+            esc_attr(self::OPTION),
+            checked((bool)self::get('expand_sdr'), true, false),
+            esc_html__('Convert SDR photos to HDR', 'hdrjpg')
+        );
+        echo '<p class="description">'.esc_html__('A photo without HDR, such as a normal JPG, gets its brightness range expanded artificially to HDR. It looks like the original, with brighter highlights on HDR screens. Otherwise, converting an SDR photo fails and does not count as a conversion.', 'hdrjpg').'</p>';
+    }
+
     public static function fieldAutoConvert(): void
     {
         printf(
             '<label><input type="checkbox" name="%s[auto_convert]" value="1" %s> %s</label>',
             esc_attr(self::OPTION),
             checked((bool)self::get('auto_convert'), true, false),
-            esc_html__('Convert HDR photos as they are uploaded (HEIC, EXR, and JPGs that carry a gain map)', 'hdrjpg')
+            esc_html__('Convert photos as they are uploaded', 'hdrjpg')
         );
+        echo '<p class="description">'.esc_html__('HEIC, EXR, and JPGs that carry a gain map. With "Convert SDR photos to HDR" on, every JPG.', 'hdrjpg').'</p>';
         echo '<p class="description">'.esc_html__('Otherwise, convert a photo from its details in the Media Library, or several at once with the Convert to HDR bulk action.', 'hdrjpg').'</p>';
     }
 

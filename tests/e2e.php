@@ -34,10 +34,16 @@ check('source is the original upload', strpos(Hdrjpg_Converter::sourcePath($id),
 $state = Hdrjpg_Converter::state($id);
 check('auto conversion started', ($state['status'] ?? '') === 'running' && !empty($state['uuid']));
 check('a check is scheduled', (bool)wp_next_scheduled(Hdrjpg_Converter::CRON_HOOK, [$id]));
-check('variants', Hdrjpg_Converter::variants('/x/Sunset 2.jpg') === [
+check('variants expand SDR sources by default', Hdrjpg_Converter::variants('/x/Sunset 2.jpg') === [
+    ['width' => 2400, 'format' => 'jpeg-xt', 'fileName' => 'sunset-2-2400', 'onSdr' => 'expandToHdr'], ['width' => 2400, 'format' => 'avif', 'fileName' => 'sunset-2-2400', 'onSdr' => 'expandToHdr'],
+    ['width' => 1200, 'format' => 'jpeg-xt', 'fileName' => 'sunset-2-1200', 'onSdr' => 'expandToHdr'], ['width' => 1200, 'format' => 'avif', 'fileName' => 'sunset-2-1200', 'onSdr' => 'expandToHdr'],
+    ['width' => 2400, 'format' => 'mp4', 'fileName' => 'sunset-2-2400', 'onSdr' => 'expandToHdr']]);
+update_option('hdrjpg_settings', ['api_key' => 'test-key', 'widths' => '2400, 1200', 'avif' => 1, 'mp4' => 1, 'expand_sdr' => 0, 'auto_convert' => 1]);
+check('variants leave SDR sources to fail when told to', Hdrjpg_Converter::variants('/x/Sunset 2.jpg') === [
     ['width' => 2400, 'format' => 'jpeg-xt', 'fileName' => 'sunset-2-2400'], ['width' => 2400, 'format' => 'avif', 'fileName' => 'sunset-2-2400'],
     ['width' => 1200, 'format' => 'jpeg-xt', 'fileName' => 'sunset-2-1200'], ['width' => 1200, 'format' => 'avif', 'fileName' => 'sunset-2-1200'],
     ['width' => 2400, 'format' => 'mp4', 'fileName' => 'sunset-2-2400']]);
+update_option('hdrjpg_settings', ['api_key' => 'test-key', 'widths' => '2400, 1200', 'avif' => 1, 'mp4' => 1, 'auto_convert' => 1]);
 
 Hdrjpg_Converter::checkFromCron($id);
 $state = Hdrjpg_Converter::state($id);
@@ -47,10 +53,15 @@ $dir = wp_get_upload_dir()['basedir'].'/hdrjpg/'.$id;
 check('files on disk', file_exists($dir.'/sunset2-2400.jpg') && file_exists($dir.'/sunset2-1200.avif') && file_exists($dir.'/sunset2-2400.mp4'));
 check('no further check scheduled', !wp_next_scheduled(Hdrjpg_Converter::CRON_HOOK, [$id]));
 
-// 3. A plain JPEG upload is not converted automatically
+// 3. A plain JPEG upload is converted automatically only when SDR photos are expanded to HDR
 make_jpeg('/tmp/plain.jpg', false);
 $plain = media_handle_sideload(['name' => 'plain.jpg', 'tmp_name' => '/tmp/plain.jpg'], 0);
-check('plain JPEG left alone on upload', Hdrjpg_Converter::state($plain) === []);
+check('plain JPEG converted on upload when SDR photos are expanded', (Hdrjpg_Converter::state($plain)['status'] ?? '') === 'running');
+update_option('hdrjpg_settings', ['api_key' => 'test-key', 'widths' => '2400, 1200', 'avif' => 1, 'mp4' => 1, 'expand_sdr' => 0, 'auto_convert' => 1]);
+make_jpeg('/tmp/plain2.jpg', false);
+$plain = media_handle_sideload(['name' => 'plain2.jpg', 'tmp_name' => '/tmp/plain2.jpg'], 0);
+check('plain JPEG left alone on upload otherwise', Hdrjpg_Converter::state($plain) === []);
+update_option('hdrjpg_settings', ['api_key' => 'test-key', 'widths' => '2400, 1200', 'avif' => 1, 'mp4' => 1, 'auto_convert' => 1]);
 
 // 4. A failing conversion keeps the reason
 make_jpeg('/tmp/flat.jpg', false);
