@@ -14,6 +14,10 @@ emails of 2026-10-27. No need to dig the emails up again.
   tests against the mock API and Plugin Check on the shipped files only (`assets/`, `includes/`,
   `hdrjpg.php`, `readme.txt`, `uninstall.php`), both in a throwaway WordPress. Plugin Check on the whole
   repo flags `tests/` and this file, which are not shipped.
+- **1.2.0 released 2026-11-05** (SVN r3785603: trunk, tags/1.2.0; assets unchanged): the welcome screen
+  and the no-key notice. Same checks as 1.1.0 before it (e2e against the mock API, Plugin Check on the
+  shipped files, in a throwaway WordPress). The machine has no `rsync`: copy the shipped files into
+  trunk with `cp -r`, and `svn rm` any file a release deletes.
 - Display name: **HDRJPG – HDR photos**. Slug: **`hdrjpg`** (permanent, cannot be changed after approval).
 - Review history: submitted ~2026-10-22. The automated pre-review (2026-10-26) flagged no code
   issues, only asked how the plugin stands out from the ~300 "image optimization" plugins. We
