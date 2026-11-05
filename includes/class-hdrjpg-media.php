@@ -69,7 +69,8 @@ class Hdrjpg_Media
             return '<p class="hdrjpg-running"><span class="spinner is-active" style="float:none;margin:0 4px 0 0"></span>'.esc_html__('Converting with HDRJPG…', 'hdrjpg').'</p>';
         }
         if ($status === 'ready') {
-            $formats = array_unique(array_map(fn ($f) => $f['format'] === 'jpeg-xt' ? 'JPEG' : strtoupper($f['format']), $state['files']));
+            $names = ['jpeg-xt' => 'JPEG', 'mp4-hevc' => 'HEVC MP4'];
+            $formats = array_unique(array_map(fn ($f) => $names[$f['format']] ?? strtoupper($f['format']), $state['files']));
             return '<p>'.esc_html(sprintf(
                 /* translators: 1: number of files, 2: formats */
                 __('Converted: %1$d files (%2$s). Wherever this photo is used in a post or page, it shows in HDR.', 'hdrjpg'),

@@ -4,7 +4,7 @@ Tags: hdr, hdr photos, ultra hdr, gain map, heic
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.2.0
+Stable tag: 1.3.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -18,7 +18,8 @@ This plugin sends the photo you uploaded to [HDRJPG](https://hdrjpg.com), which 
 
 * a gain map JPEG, at each width you choose, shown in HDR by Chrome, Edge and Safari 26, and as a normal photo everywhere else;
 * an AVIF, smaller, for the browsers that show HDR AVIF;
-* a short, silent HDR MP4, for Firefox and Safari on a Mac, which play HDR video but show no HDR image.
+* a short, silent HDR MP4, for Firefox and Safari on a Mac, which play HDR video but show no HDR image;
+* the same MP4 in 10-bit HEVC, with smoother gradients and more accurate color, for the browsers that play HEVC. The others get the first MP4.
 
 Wherever the photo appears in your posts and pages, in an Image block, in a gallery, as a featured image or inline, the plugin serves these files with the HDRJPG markup. Each visitor's browser gets the version it shows in HDR. On a screen without HDR, visitors see a normal photo.
 
@@ -53,6 +54,10 @@ It also converts photos that have no HDR, such as normal JPGs. Their brightness 
 
 Firefox shows no image format in HDR, but it plays HDR video on macOS and Windows. Safari on a Mac shows HDR images only from macOS 26, and the browser does not tell which macOS it runs on, so it gets the video too. The video is muted, plays inline and looks like the photo.
 
+= What is the HEVC MP4? =
+
+A second version of the video, in 10-bit HEVC (H.265). Gradients such as skies stay smooth, and colors are more accurate. Not every browser plays HEVC, so the plugin also keeps the standard MP4, and each browser gets the one it can play. You can turn it off in Settings > HDRJPG. Photos converted before version 1.3.0 keep their standard MP4 until you convert them again.
+
 = Where are the converted files? =
 
 In wp-content/uploads/hdrjpg/, in a folder per photo. They are deleted when you delete the photo from the Media Library.
@@ -62,6 +67,12 @@ In wp-content/uploads/hdrjpg/, in a folder per photo. They are deleted when you 
 No. The upload and the sizes WordPress made of it stay as they are, and the plugin stops serving the HDR files as soon as you deactivate it.
 
 == Changelog ==
+
+= 1.3.0 =
+* Better image quality: HDRJPG's conversions now keep the colors of your original photo in every file. Videos no longer look dull in browsers that show them without HDR, and the standard JPEG keeps the original's saturation. Photos converted from now on get it.
+* New: each photo also gets a 10-bit HEVC MP4, with smoother gradients and more accurate color. Browsers that play HEVC show it instead of the standard MP4. It is on by default, also after the update, unless you had turned off the MP4 video. You can turn it off in Settings > HDRJPG.
+* With the default settings each photo becomes 6 files, which the free plan now allows.
+* If a browser says it plays HEVC but then cannot, the standard MP4 plays instead, and the photo shows again if that fails too.
 
 = 1.2.0 =
 * New: until you add your API key, Settings > HDRJPG explains how to get a free one, with links to sign up and to example photos, and a box to paste the key.

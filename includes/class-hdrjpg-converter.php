@@ -198,7 +198,8 @@ class Hdrjpg_Converter
     }
 
     /**
-     * The variants the settings ask for: a gain map JPEG and an AVIF at each width, and one MP4 at the largest.
+     * The variants the settings ask for: a gain map JPEG and an AVIF at each width, and one MP4 at the largest, with
+     * its 10-bit HEVC version. The HEVC MP4 is made only with the H.264 one, which hdrjpg.js needs to show a video at all.
      * An SDR source is expanded to HDR when the settings say so; otherwise the API fails the conversion.
      */
     public static function variants(string $sourcePath): array
@@ -219,6 +220,10 @@ class Hdrjpg_Converter
         }
         if (Hdrjpg_Settings::get('mp4')) {
             $variants[] = ['width' => $widths[0], 'format' => 'mp4', 'fileName' => $base.'-'.$widths[0]];
+            if (Hdrjpg_Settings::get('mp4_hevc')) {
+                // Comes back as <fileName>.hevc.mp4, next to the H.264 <fileName>.mp4
+                $variants[] = ['width' => $widths[0], 'format' => 'mp4-hevc', 'fileName' => $base.'-'.$widths[0]];
+            }
         }
         if (Hdrjpg_Settings::get('expand_sdr')) {
             $variants = array_map(fn ($variant) => $variant + ['onSdr' => 'expandToHdr'], $variants);
@@ -266,9 +271,11 @@ class Hdrjpg_Converter
         }
         $files = [];
         for ($i = 0; $i < $zip->numFiles; $i++) {
-            // Only the file name is used, so an entry can never land outside the folder
-            $name = sanitize_file_name(wp_basename((string)$zip->getNameIndex($i)));
-            if ($name === '' || !isset($outputs[$name])) {
+            // Only a plain file name the API listed is used, so an entry can never land outside the folder.
+            // sanitize_file_name() is not used: it would turn photo.hevc.mp4 into photo.hevc_.mp4, as WordPress does
+            // with any inner extension it does not know, and the file would no longer match the API's name for it
+            $name = wp_basename((string)$zip->getNameIndex($i));
+            if (!self::isPlainFileName($name) || !isset($outputs[$name])) {
                 continue;
             }
             file_put_contents($directory['path'].'/'.$name, $zip->getFromIndex($i));
@@ -287,6 +294,14 @@ class Hdrjpg_Converter
         }
         usort($files, fn ($a, $b) => $b['width'] <=> $a['width']);
         return $files;
+    }
+
+    /**
+     * A name, then one or more extensions, made of letters, digits, dashes and underscores: photo-2400.jpg, photo-2400.hevc.mp4.
+     */
+    private static function isPlainFileName(string $name): bool
+    {
+        return (bool)preg_match('/^[A-Za-z0-9][A-Za-z0-9_-]*(\.[A-Za-z0-9]+)+$/', $name);
     }
 
     public static function deleteFiles(int $attachmentId): void

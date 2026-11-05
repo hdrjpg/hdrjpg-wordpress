@@ -13,7 +13,7 @@ every browser. See [readme.txt](readme.txt) for the user-facing description.
 | `includes/class-hdrjpg-media.php` | The HDR field in the Media Library, its AJAX calls and the bulk action |
 | `includes/class-hdrjpg-frontend.php` | Turns `<img>` tags of converted photos into HDRJPG embeds |
 | `includes/class-hdrjpg-settings.php` | Settings > HDRJPG |
-| `assets/hdrjpg.js` | A build of [hdrjpg-js](https://github.com/hdrjpg/hdrjpg-js) |
+| `assets/hdrjpg.js` | A build of [hdrjpg-js](https://github.com/hdrjpg/hdrjpg-js) (1.3.0), not minified: `esbuild src/hdrjpg.js --bundle --format=iife --global-name=hdrjpg --target=es2018` in that repository |
 
 ## Testing
 

@@ -16,6 +16,7 @@ class Hdrjpg_Settings
         'widths' => '2400, 1200',
         'avif' => 1,
         'mp4' => 1,
+        'mp4_hevc' => 1,
         'expand_sdr' => 1,
         'auto_convert' => 0,
     ];
@@ -76,8 +77,22 @@ class Hdrjpg_Settings
 
     public static function get(string $key)
     {
+        $settings = self::saved();
+        return array_key_exists($key, $settings) ? $settings[$key] : self::DEFAULTS[$key];
+    }
+
+    /**
+     * The settings as saved. Settings saved before 1.3.0 have no choice for the HEVC MP4: it follows the MP4 choice,
+     * so it is on unless MP4 video was turned off. New installs get it from the defaults.
+     */
+    private static function saved(): array
+    {
         $settings = get_option(self::OPTION, []);
-        return is_array($settings) && array_key_exists($key, $settings) ? $settings[$key] : self::DEFAULTS[$key];
+        $settings = is_array($settings) ? $settings : [];
+        if (!array_key_exists('mp4_hevc', $settings) && array_key_exists('mp4', $settings)) {
+            $settings['mp4_hevc'] = empty($settings['mp4']) ? 0 : 1;
+        }
+        return $settings;
     }
 
     /**
@@ -121,7 +136,7 @@ class Hdrjpg_Settings
     public static function sanitize($input): array
     {
         $input = is_array($input) ? $input : [];
-        $current = get_option(self::OPTION, []);
+        $current = self::saved();
         $apiKey = trim((string)($input['api_key'] ?? ''));
         // The welcome screen's form sends the key alone; the other settings stay as they are, where a missing
         // checkbox from the full form would mean "off"
@@ -129,14 +144,15 @@ class Hdrjpg_Settings
             if ($apiKey === '') {
                 add_settings_error(self::OPTION, 'hdrjpg_no_key', __('Paste your API key first.', 'hdrjpg'));
             }
-            $input = ['api_key' => $apiKey] + (is_array($current) ? $current : []) + self::DEFAULTS;
+            $input = ['api_key' => $apiKey] + $current + self::DEFAULTS;
         }
         return [
             // An empty field keeps the saved key, which the form never shows
-            'api_key' => $apiKey !== '' ? sanitize_text_field($apiKey) : (is_array($current) ? (string)($current['api_key'] ?? '') : ''),
+            'api_key' => $apiKey !== '' ? sanitize_text_field($apiKey) : (string)($current['api_key'] ?? ''),
             'widths' => sanitize_text_field((string)($input['widths'] ?? self::DEFAULTS['widths'])),
             'avif' => empty($input['avif']) ? 0 : 1,
             'mp4' => empty($input['mp4']) ? 0 : 1,
+            'mp4_hevc' => empty($input['mp4_hevc']) ? 0 : 1,
             'expand_sdr' => empty($input['expand_sdr']) ? 0 : 1,
             'auto_convert' => empty($input['auto_convert']) ? 0 : 1,
         ];
@@ -167,7 +183,12 @@ class Hdrjpg_Settings
 
     public static function fieldFormats(): void
     {
-        foreach (['avif' => __('AVIF, smaller, shown in HDR by Chrome, Edge and Safari 26', 'hdrjpg'), 'mp4' => __('MP4 video, for HDR in Firefox and in Safari on a Mac', 'hdrjpg')] as $key => $label) {
+        $formats = [
+            'avif' => __('AVIF, smaller, shown in HDR by Chrome, Edge and Safari 26', 'hdrjpg'),
+            'mp4' => __('MP4 video, for HDR in Firefox and in Safari on a Mac', 'hdrjpg'),
+            'mp4_hevc' => __('MP4 (HEVC 10-bit), smoother gradients and more accurate color. Browsers that play HEVC get it instead of the MP4 video, which it needs.', 'hdrjpg'),
+        ];
+        foreach ($formats as $key => $label) {
             printf(
                 '<label><input type="checkbox" name="%s[%s]" value="1" %s> %s</label><br>',
                 esc_attr(self::OPTION),
@@ -179,8 +200,8 @@ class Hdrjpg_Settings
         echo '<p class="description">'.esc_html__('A gain map JPEG is always made: it shows in HDR in Chrome, Edge and Safari 26, and as a normal photo everywhere else.', 'hdrjpg').' ';
         printf(
             /* translators: %d: number of files per photo */
-            esc_html__('With these settings each photo becomes %d files and counts as one conversion. The free plan allows up to 5 files per photo.', 'hdrjpg'),
-            count(self::widths()) * (self::get('avif') ? 2 : 1) + (self::get('mp4') ? 1 : 0)
+            esc_html__('With these settings each photo becomes %d files and counts as one conversion. The free plan allows up to 6 files per photo.', 'hdrjpg'),
+            count(Hdrjpg_Converter::variants('photo'))
         );
         echo '</p>';
     }

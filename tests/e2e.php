@@ -38,20 +38,39 @@ check('a check is scheduled', (bool)wp_next_scheduled(Hdrjpg_Converter::CRON_HOO
 check('variants expand SDR sources by default', Hdrjpg_Converter::variants('/x/Sunset 2.jpg') === [
     ['width' => 2400, 'format' => 'jpeg-xt', 'fileName' => 'sunset-2-2400', 'onSdr' => 'expandToHdr'], ['width' => 2400, 'format' => 'avif', 'fileName' => 'sunset-2-2400', 'onSdr' => 'expandToHdr'],
     ['width' => 1200, 'format' => 'jpeg-xt', 'fileName' => 'sunset-2-1200', 'onSdr' => 'expandToHdr'], ['width' => 1200, 'format' => 'avif', 'fileName' => 'sunset-2-1200', 'onSdr' => 'expandToHdr'],
-    ['width' => 2400, 'format' => 'mp4', 'fileName' => 'sunset-2-2400', 'onSdr' => 'expandToHdr']]);
+    ['width' => 2400, 'format' => 'mp4', 'fileName' => 'sunset-2-2400', 'onSdr' => 'expandToHdr'], ['width' => 2400, 'format' => 'mp4-hevc', 'fileName' => 'sunset-2-2400', 'onSdr' => 'expandToHdr']]);
 update_option('hdrjpg_settings', ['api_key' => 'test-key', 'widths' => '2400, 1200', 'avif' => 1, 'mp4' => 1, 'expand_sdr' => 0, 'auto_convert' => 1]);
 check('variants leave SDR sources to fail when told to', Hdrjpg_Converter::variants('/x/Sunset 2.jpg') === [
     ['width' => 2400, 'format' => 'jpeg-xt', 'fileName' => 'sunset-2-2400'], ['width' => 2400, 'format' => 'avif', 'fileName' => 'sunset-2-2400'],
     ['width' => 1200, 'format' => 'jpeg-xt', 'fileName' => 'sunset-2-1200'], ['width' => 1200, 'format' => 'avif', 'fileName' => 'sunset-2-1200'],
-    ['width' => 2400, 'format' => 'mp4', 'fileName' => 'sunset-2-2400']]);
+    ['width' => 2400, 'format' => 'mp4', 'fileName' => 'sunset-2-2400'], ['width' => 2400, 'format' => 'mp4-hevc', 'fileName' => 'sunset-2-2400']]);
 update_option('hdrjpg_settings', ['api_key' => 'test-key', 'widths' => '2400, 1200', 'avif' => 1, 'mp4' => 1, 'auto_convert' => 1]);
+
+// 2b. The HEVC MP4: on for new installs and for settings saved before 1.3.0, unless the MP4 video was turned off
+$formats = function () { return array_column(Hdrjpg_Converter::variants('/x/a.jpg'), 'format'); };
+delete_option('hdrjpg_settings');
+check('new install: HEVC MP4 on, and every default format fits the free plan', in_array('mp4-hevc', $formats(), true) && count($formats()) <= 6);
+update_option('hdrjpg_settings', ['api_key' => 'test-key', 'widths' => '2400, 1200', 'avif' => 1, 'mp4' => 1, 'expand_sdr' => 1, 'auto_convert' => 1]);
+check('settings from 1.2.0 with the MP4 on: HEVC MP4 on', Hdrjpg_Settings::get('mp4_hevc') === 1 && in_array('mp4-hevc', $formats(), true));
+update_option('hdrjpg_settings', ['api_key' => 'test-key', 'widths' => '2400, 1200', 'avif' => 1, 'mp4' => 0, 'expand_sdr' => 1, 'auto_convert' => 1]);
+check('settings from 1.2.0 with the MP4 off: no video at all', Hdrjpg_Settings::get('mp4_hevc') === 0 && $formats() === ['jpeg-xt', 'avif', 'jpeg-xt', 'avif']);
+update_option('hdrjpg_settings', ['api_key' => 'test-key', 'widths' => '2400, 1200', 'avif' => 1, 'mp4' => 1, 'mp4_hevc' => 0, 'expand_sdr' => 1, 'auto_convert' => 1]);
+check('HEVC MP4 turned off: only the H.264 MP4', !in_array('mp4-hevc', $formats(), true) && in_array('mp4', $formats(), true));
+update_option('hdrjpg_settings', ['api_key' => 'test-key', 'widths' => '2400, 1200', 'avif' => 1, 'mp4' => 0, 'mp4_hevc' => 1, 'expand_sdr' => 1, 'auto_convert' => 1]);
+check('HEVC MP4 is not made without the MP4 it needs', !in_array('mp4-hevc', $formats(), true));
+$saved = Hdrjpg_Settings::sanitize(['api_key' => '', 'widths' => '2400, 1200', 'avif' => '1', 'mp4' => '1', 'auto_convert' => '1']);
+check('saving the form with the HEVC box unticked turns it off', $saved['mp4_hevc'] === 0 && $saved['api_key'] === 'test-key');
+update_option('hdrjpg_settings', ['api_key' => 'test-key', 'widths' => '2400, 1200', 'avif' => 1, 'mp4' => 1, 'auto_convert' => 1]);
+$fieldFormats = (function () { ob_start(); Hdrjpg_Settings::fieldFormats(); return ob_get_clean(); })();
+check('formats field: HEVC box ticked, 6 files counted', preg_match('/name="hdrjpg_settings\[mp4_hevc\]" value="1"\s+checked/', $fieldFormats) && strpos($fieldFormats, 'becomes 6 files') !== false && strpos($fieldFormats, 'up to 6 files') !== false);
 
 Hdrjpg_Converter::checkFromCron($id);
 $state = Hdrjpg_Converter::state($id);
 check('ready after the check', ($state['status'] ?? '') === 'ready');
-check('5 files stored, largest first', count($state['files']) === 5 && $state['files'][0]['width'] === 2400);
+check('6 files stored, largest first', count($state['files']) === 6 && $state['files'][0]['width'] === 2400);
+check('HEVC MP4 stored under its own name and format', in_array(['file' => 'hdrjpg/'.$id.'/sunset2-2400.hevc.mp4', 'format' => 'mp4-hevc', 'width' => 2400, 'height' => 1600], $state['files'], true));
 $dir = wp_get_upload_dir()['basedir'].'/hdrjpg/'.$id;
-check('files on disk', file_exists($dir.'/sunset2-2400.jpg') && file_exists($dir.'/sunset2-1200.avif') && file_exists($dir.'/sunset2-2400.mp4'));
+check('files on disk', file_exists($dir.'/sunset2-2400.jpg') && file_exists($dir.'/sunset2-1200.avif') && file_exists($dir.'/sunset2-2400.mp4') && file_exists($dir.'/sunset2-2400.hevc.mp4'));
 check('no further check scheduled', !wp_next_scheduled(Hdrjpg_Converter::CRON_HOOK, [$id]));
 
 // 3. A plain JPEG upload is converted automatically only when SDR photos are expanded to HDR
@@ -84,12 +103,20 @@ $GLOBALS['post'] = get_post($post); setup_postdata($GLOBALS['post']);
 wp_enqueue_scripts();
 $html = apply_filters('the_content', $content);
 echo "--- rendered:\n".$html."\n---\n";
-check('wrapped in the embed', strpos($html, '<span class="hdrjpg" data-mp4-src="') !== false && strpos($html, 'sunset2-2400.mp4') !== false);
+check('wrapped in the embed', strpos($html, '<span class="hdrjpg" data-mp4-src="') !== false && preg_match('/data-mp4-src="[^"]+\/sunset2-2400\.mp4"/', $html));
+check('HEVC MP4 in the embed', preg_match('/data-mp4-src="[^"]+" data-mp4-hevc-src="[^"]+\/sunset2-2400\.hevc\.mp4"/', $html));
 check('img uses the gain map JPEGs', preg_match('/<img[^>]+src="[^"]+sunset2-2400\.jpg"/', $html) && strpos($html, 'sunset2-1200.jpg 1200w') !== false);
 check('no SDR srcset left', strpos($html, '-1024x683') === false);
 check('AVIF source', strpos($html, '<source type="image/avif" srcset="') !== false && strpos($html, 'sunset2-1200.avif 1200w') !== false);
 check('only once', substr_count($html, 'class="hdrjpg"') === 1);
 check('script enqueued', wp_script_is('hdrjpg', 'enqueued'));
+
+// 6b. A photo converted before 1.3.0 has no HEVC file: the embed plays the H.264 MP4 as before
+$before = Hdrjpg_Converter::state($id);
+update_post_meta($id, Hdrjpg_Converter::META, ['files' => array_values(array_filter($before['files'], fn ($f) => $f['format'] !== 'mp4-hevc'))] + $before);
+$old = Hdrjpg_Frontend::embed('<img alt="">', $id);
+check('older conversion: MP4 without the HEVC attribute', strpos($old, 'data-mp4-src="') !== false && strpos($old, 'data-mp4-hevc-src') === false);
+update_post_meta($id, Hdrjpg_Converter::META, $before);
 
 // 7. A cropped thumbnail is left alone
 $thumb = wp_get_attachment_image($id, 'thumbnail');
@@ -111,7 +138,7 @@ check('no notice on other screens', $render([Hdrjpg_Settings::class, 'noKeyNotic
 
 // 10. The welcome screen's form saves the key and leaves the other settings as they are
 $saved = Hdrjpg_Settings::sanitize(['key_only' => 1, 'api_key' => ' new-key ']);
-check('key-only save keeps the other settings', $saved === ['api_key' => 'new-key', 'widths' => '1600', 'avif' => 0, 'mp4' => 1, 'expand_sdr' => 0, 'auto_convert' => 1]);
+check('key-only save keeps the other settings', $saved === ['api_key' => 'new-key', 'widths' => '1600', 'avif' => 0, 'mp4' => 1, 'mp4_hevc' => 1, 'expand_sdr' => 0, 'auto_convert' => 1]);
 Hdrjpg_Settings::sanitize(['key_only' => 1, 'api_key' => '']);
 check('key-only save without a key says so', in_array('hdrjpg_no_key', array_column(get_settings_errors('hdrjpg_settings'), 'code'), true));
 update_option('hdrjpg_settings', $saved);

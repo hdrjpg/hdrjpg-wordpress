@@ -22,7 +22,7 @@ class Hdrjpg_Frontend
 
     public static function registerScript(): void
     {
-        wp_register_script('hdrjpg', HDRJPG_URL.'assets/hdrjpg.js', [], '1.2.0', ['in_footer' => true, 'strategy' => 'defer']);
+        wp_register_script('hdrjpg', HDRJPG_URL.'assets/hdrjpg.js', [], '1.3.0', ['in_footer' => true, 'strategy' => 'defer']);
     }
 
     public static function filterContentImage(string $html, string $context, int $attachmentId): string
@@ -97,6 +97,10 @@ class Hdrjpg_Frontend
         $video = '';
         if (!empty($byFormat['mp4'])) {
             $video = ' data-mp4-src="'.esc_url(self::url($byFormat['mp4'][0])).'"';
+            // Played instead where the browser plays HEVC. Photos converted before 1.3.0 have no HEVC file
+            if (!empty($byFormat['mp4-hevc'])) {
+                $video .= ' data-mp4-hevc-src="'.esc_url(self::url($byFormat['mp4-hevc'][0])).'"';
+            }
             wp_enqueue_script('hdrjpg');
         }
 

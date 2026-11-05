@@ -20,8 +20,11 @@ var hdrjpg = (() => {
   // src/hdrjpg.js
   var hdrjpg_exports = {};
   __export(hdrjpg_exports, {
+    HEVC_VIDEO_TYPE: () => HEVC_VIDEO_TYPE,
     apply: () => apply,
+    chooseVideoSource: () => chooseVideoSource,
     currentEnvironment: () => currentEnvironment,
+    fallbackVideoSource: () => fallbackVideoSource,
     needsVideo: () => needsVideo,
     replaceWithVideo: () => replaceWithVideo
   });
@@ -50,6 +53,19 @@ var hdrjpg = (() => {
       isDynamicRangeLimitSupported: !!(window.CSS && CSS.supports("dynamic-range-limit", "no-limit"))
     };
   }
+  var HEVC_VIDEO_TYPE = 'video/mp4; codecs="hvc1.2.4.L153.B0"';
+  function chooseVideoSource({ mp4Src, mp4HevcSrc }, canPlayType) {
+    if (mp4HevcSrc && canPlayType(HEVC_VIDEO_TYPE) !== "") {
+      return mp4HevcSrc;
+    }
+    return mp4Src;
+  }
+  function fallbackVideoSource({ mp4Src, mp4HevcSrc }, failedSrc) {
+    if (mp4HevcSrc && failedSrc === mp4HevcSrc && mp4Src && mp4Src !== mp4HevcSrc) {
+      return mp4Src;
+    }
+    return void 0;
+  }
   function replaceWithVideo(element) {
     const picture = element.querySelector("picture");
     if (!picture || !element.dataset.mp4Src) {
@@ -77,7 +93,17 @@ var hdrjpg = (() => {
         }
       }
     }
-    video.src = element.dataset.mp4Src;
+    let src = chooseVideoSource(element.dataset, (type) => video.canPlayType(type));
+    video.addEventListener("error", () => {
+      src = fallbackVideoSource(element.dataset, src);
+      if (src) {
+        video.src = src;
+      } else {
+        video.replaceWith(picture);
+        element.dataset.hdrjpgVideo = "failed";
+      }
+    });
+    video.src = src;
     picture.replaceWith(video);
     element.dataset.hdrjpgVideo = "";
   }

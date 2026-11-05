@@ -5,7 +5,7 @@ import {crc32} from 'node:zlib';
 
 const KEY = process.env.MOCK_KEY || 'test-key';
 const conversions = new Map();
-const extensions = {'jpeg-xt': 'jpg', avif: 'avif', mp4: 'mp4', 'jpeg-xl': 'jxl', jpeg: 'sdr.jpg'};
+const extensions = {'jpeg-xt': 'jpg', avif: 'avif', mp4: 'mp4', 'mp4-hevc': 'hevc.mp4', 'jpeg-xl': 'jxl', jpeg: 'sdr.jpg'};
 
 function zip(files) {
     const parts = [], central = [];
