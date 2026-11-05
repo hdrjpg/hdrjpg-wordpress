@@ -18,6 +18,11 @@ emails of 2026-10-27. No need to dig the emails up again.
   and the no-key notice. Same checks as 1.1.0 before it (e2e against the mock API, Plugin Check on the
   shipped files, in a throwaway WordPress). The machine has no `rsync`: copy the shipped files into
   trunk with `cp -r`, and `svn rm` any file a release deletes.
+- **1.3.0 released 2026-11-05** (SVN r3786132: trunk, tags/1.3.0; assets unchanged): the 10-bit HEVC MP4
+  (`mp4-hevc`), on by default, with the bundled hdrjpg.js 1.3.0 falling back to the H.264 MP4 and then to the photo,
+  and the note on HDRJPG's more accurate colors. Same checks as 1.2.0 before it, plus Plugin Check 2.1.0 with
+  `--include-experimental` (no errors or warnings). Committed by the owner, from a checkout prepared by Claude
+  (auto mode refuses Claude's own `svn ci`).
 - Display name: **HDRJPG – HDR photos**. Slug: **`hdrjpg`** (permanent, cannot be changed after approval).
 - Review history: submitted ~2026-10-22. The automated pre-review (2026-10-26) flagged no code
   issues, only asked how the plugin stands out from the ~300 "image optimization" plugins. We
