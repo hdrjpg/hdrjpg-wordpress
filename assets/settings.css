@@ -1,0 +1,104 @@
+/* Settings > HDRJPG before a key is saved, and the notice that points there */
+
+.hdrjpg-welcome {
+	max-width: 760px;
+}
+
+.hdrjpg-welcome .hdrjpg-welcome-header {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	margin: 12px 0 20px;
+	font-size: 28px;
+	font-weight: 600;
+}
+
+.hdrjpg-welcome-header img,
+.hdrjpg-notice img {
+	border-radius: 10px;
+	flex: none;
+}
+
+.hdrjpg-card {
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 8px;
+	padding: 28px 32px;
+	margin-bottom: 16px;
+}
+
+.hdrjpg-card h2 {
+	font-size: 24px;
+	line-height: 1.3;
+	margin: 0 0 10px;
+}
+
+.hdrjpg-lead {
+	font-size: 15px;
+	color: #50575e;
+	margin: 0 0 8px;
+}
+
+.hdrjpg-examples {
+	font-size: 14px;
+	margin: 0 0 24px;
+}
+
+.hdrjpg-features {
+	margin: 0 0 24px;
+}
+
+.hdrjpg-features li {
+	display: flex;
+	gap: 12px;
+	margin-bottom: 16px;
+}
+
+.hdrjpg-features .dashicons {
+	color: #16404f;
+	font-size: 24px;
+	width: 24px;
+	height: 24px;
+	flex: none;
+}
+
+.hdrjpg-features strong {
+	font-size: 15px;
+}
+
+.hdrjpg-features p {
+	margin: 4px 0 0;
+	font-size: 14px;
+}
+
+.hdrjpg-card .button-primary {
+	background: #16404f;
+	border-color: #16404f;
+}
+
+.hdrjpg-card .button-primary:hover,
+.hdrjpg-card .button-primary:focus {
+	background: #0b1d26;
+	border-color: #0b1d26;
+}
+
+.hdrjpg-key-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	margin: 10px 0 6px;
+}
+
+.hdrjpg-notice {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 4px 14px;
+	padding-top: 8px;
+	padding-bottom: 8px;
+}
+
+.hdrjpg-notice p {
+	margin: 0;
+	padding: 0;
+}

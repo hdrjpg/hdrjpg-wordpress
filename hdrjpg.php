@@ -3,7 +3,7 @@
  * Plugin Name:       HDRJPG – HDR photos
  * Plugin URI:        https://github.com/hdrjpg/hdrjpg-wordpress
  * Description:       Converts the HDR photos in your Media Library (iPhone HEIC, Android Ultra HDR JPG, EXR) into web-ready HDR files with the HDRJPG API, and shows them in HDR in almost every browser.
- * Version:           1.1.0
+ * Version:           1.2.0
  * Requires at least: 6.2
  * Requires PHP:      7.4
  * Author:            HDRJPG
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('HDRJPG_VERSION', '1.1.0');
+define('HDRJPG_VERSION', '1.2.0');
 define('HDRJPG_FILE', __FILE__);
 define('HDRJPG_DIR', plugin_dir_path(__FILE__));
 define('HDRJPG_URL', plugin_dir_url(__FILE__));

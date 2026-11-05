@@ -4,7 +4,7 @@ Tags: hdr, hdr photos, ultra hdr, gain map, heic
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.1.0
+Stable tag: 1.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -62,6 +62,10 @@ In wp-content/uploads/hdrjpg/, in a folder per photo. They are deleted when you 
 No. The upload and the sizes WordPress made of it stay as they are, and the plugin stops serving the HDR files as soon as you deactivate it.
 
 == Changelog ==
+
+= 1.2.0 =
+* New: until you add your API key, Settings > HDRJPG explains how to get a free one, with links to sign up and to example photos, and a box to paste the key.
+* New: a notice on the Plugins page, the dashboard and the Media Library reminds you to add your API key. It goes away once the key is saved.
 
 = 1.1.0 =
 * New: photos without HDR, such as normal JPGs, are converted too. Their brightness range is expanded artificially to HDR. You can turn this off in Settings > HDRJPG.

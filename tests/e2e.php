@@ -17,6 +17,7 @@ function make_jpeg(string $path, bool $gainMap): void {
 require_once ABSPATH.'wp-admin/includes/image.php';
 require_once ABSPATH.'wp-admin/includes/file.php';
 require_once ABSPATH.'wp-admin/includes/media.php';
+require_once ABSPATH.'wp-admin/includes/template.php';
 wp_set_current_user(1);
 
 // 1. Settings: no key yet
@@ -97,5 +98,25 @@ check('square thumbnail untouched', strpos(Hdrjpg_Frontend::embed($thumb, $id), 
 // 8. Deleting the attachment deletes its files
 wp_delete_attachment($id, true);
 check('files removed with the attachment', !is_dir($dir));
+
+// 9. Without a key: the settings page shows the welcome screen, and the notice shows where it should
+$render = function (callable $fn) { ob_start(); $fn(); return ob_get_clean(); };
+update_option('hdrjpg_settings', ['api_key' => '', 'widths' => '1600', 'avif' => 0, 'mp4' => 1, 'expand_sdr' => 0, 'auto_convert' => 1]);
+$page = $render([Hdrjpg_Settings::class, 'page']);
+check('welcome screen without a key', strpos($page, 'https://hdrjpg.com/signup') !== false && strpos($page, 'https://hdrjpg.com/examples') !== false && strpos($page, '[key_only]') !== false);
+set_current_screen('plugins');
+check('notice on the plugins page without a key', strpos($render([Hdrjpg_Settings::class, 'noKeyNotice']), 'options-general.php?page=hdrjpg') !== false);
+set_current_screen('edit-post');
+check('no notice on other screens', $render([Hdrjpg_Settings::class, 'noKeyNotice']) === '');
+
+// 10. The welcome screen's form saves the key and leaves the other settings as they are
+$saved = Hdrjpg_Settings::sanitize(['key_only' => 1, 'api_key' => ' new-key ']);
+check('key-only save keeps the other settings', $saved === ['api_key' => 'new-key', 'widths' => '1600', 'avif' => 0, 'mp4' => 1, 'expand_sdr' => 0, 'auto_convert' => 1]);
+Hdrjpg_Settings::sanitize(['key_only' => 1, 'api_key' => '']);
+check('key-only save without a key says so', in_array('hdrjpg_no_key', array_column(get_settings_errors('hdrjpg_settings'), 'code'), true));
+update_option('hdrjpg_settings', $saved);
+set_current_screen('plugins');
+check('no notice once a key is saved', $render([Hdrjpg_Settings::class, 'noKeyNotice']) === '');
+check('full settings once a key is saved', strpos($render([Hdrjpg_Settings::class, 'page']), '[key_only]') === false);
 
 echo empty($GLOBALS['failures']) ? "ALL PASSED\n" : $GLOBALS['failures']." FAILED\n";
