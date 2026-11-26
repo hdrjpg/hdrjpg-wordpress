@@ -23,6 +23,12 @@ emails of 2026-10-27. No need to dig the emails up again.
   and the note on HDRJPG's more accurate colors. Same checks as 1.2.0 before it, plus Plugin Check 2.1.0 with
   `--include-experimental` (no errors or warnings). Committed by the owner, from a checkout prepared by Claude
   (auto mode refuses Claude's own `svn ci`).
+- **Tested up to 7.2 on 2026-11-26** (SVN r3826552: `readme.txt` only, in trunk and tags/1.3.0; no version bump).
+  Tested on 7.2-RC3 in a throwaway WordPress: Media Library uploads through 7.2's client-side media pipeline
+  (Chromium) keep the original byte for byte as `original_image`, `add_attachment` still fires on it and the
+  conversion starts from it; HEIC (no browser decoder on Linux) and EXR take the classic upload path. Then e2e
+  against the mock API and Plugin Check 2.2.0 `--include-experimental` on the shipped files. The PHP image's
+  2 MB upload limit makes plupload drop larger files silently ("File size error"): raise it in a test container.
 - Display name: **HDRJPG – HDR photos**. Slug: **`hdrjpg`** (permanent, cannot be changed after approval).
 - Review history: submitted ~2026-10-22. The automated pre-review (2026-10-26) flagged no code
   issues, only asked how the plugin stands out from the ~300 "image optimization" plugins. We
